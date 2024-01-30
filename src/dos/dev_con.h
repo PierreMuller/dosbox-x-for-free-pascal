@@ -62,6 +62,7 @@ extern bool inshell;
 #if defined(USE_TTF)
 extern bool ttf_dosv;
 #endif
+extern FILE *CopyConToFile;
 
 uint8_t DefaultANSIAttr() {
 	return IS_PC98_ARCH ? 0xE1 : 0x07;
@@ -480,7 +481,7 @@ private:
         return false;
     }
 
-	static void Real_INT10_TeletypeOutput(uint8_t xChar,uint8_t xAttr) {
+	void Real_INT10_TeletypeOutput(uint8_t xChar,uint8_t xAttr) {
         if (IS_PC98_ARCH && (real_readb(0x60, 0x8A) == 1)) {
             if (con_sjis.take(xChar)) {
                 BIOS_NCOLS;
@@ -515,6 +516,8 @@ private:
             reg_bl=xAttr;
 
             CALLBACK_RunRealInt(0x10);
+	    if (CopyConToFile != NULL)
+		fprintf (CopyConToFile,"%c",xChar);
 
             reg_ax=oldax;
             reg_bx=oldbx;
@@ -522,7 +525,7 @@ private:
 	}
 
 
-	static void Real_WriteChar(uint8_t cur_col,uint8_t cur_row,
+	void Real_WriteChar(uint8_t cur_col,uint8_t cur_row,
 					uint8_t page,uint8_t chr,uint8_t attr,uint8_t useattr) {
 		//Cursor position
 		Real_INT10_SetCursorPos(cur_row,cur_col,page);
@@ -550,6 +553,9 @@ private:
         else
             CALLBACK_RunRealInt(0x10);
 
+	if (CopyConToFile != NULL) {
+		fprintf (CopyConToFile,"%c",chr);
+	}
 		reg_ax=oldax;
 		reg_bx=oldbx;
 		reg_cx=oldcx;
@@ -591,7 +597,7 @@ private:
 		Real_INT10_SetCursorPos(cur_row,cur_col,page);	
     }
 	
-	static void AdjustCursorPosition(uint8_t& cur_col,uint8_t& cur_row) {
+	void AdjustCursorPosition(uint8_t& cur_col,uint8_t& cur_row) {
 		BIOS_NCOLS;BIOS_NROWS;
 		auto defattr = DefaultANSIAttr();
 		//Need a new line?
@@ -1103,6 +1109,8 @@ bool device_CON::Write(const uint8_t * data,uint16_t * size) {
                 logging_con = true;
                 LOG_MSG(log_dev_con==2?"%s":"DOS CON: %s",log_dev_con_str.c_str());
                 logging_con = false;
+		if (CopyConToFile != NULL)
+		    fprintf (CopyConToFile,"%s",log_dev_con_str.c_str());
                 log_dev_con_str.clear();
             }
 
@@ -1581,6 +1589,7 @@ device_CON::device_CON() {
 
 	SetName("CON");
 	readcache=0;
+	CopyConToFile=NULL;
 
     if (IS_PC98_ARCH) {
         /* On real MS-DOS for PC-98, ANSI.SYS is effectively part of the DOS kernel, and cannot be turned off. */

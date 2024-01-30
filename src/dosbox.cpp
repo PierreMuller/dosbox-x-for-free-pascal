@@ -4587,6 +4587,9 @@ void DOSBOX_SetupConfigSections(void) {
     Pstring->Set_help("Language code of the keyboard layout (or none).");
     Pstring->SetBasic(true);
 
+    Pstring = secprop->Add_string("copy_con_to_file",Property::Changeable::OnlyAtStart, "");
+    Pstring->Set_help("Print all CON output to a file");
+
     Pstring = secprop->Add_string("customcodepage",Property::Changeable::WhenIdle, "");
     Pstring->Set_help("Set a custom code page for CHCP command and specify a SBCS code page file, following the standard SBCS code page format.\n"
                     "Examples of SBCS code pages are available from the Unicode Consortium website: https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/");

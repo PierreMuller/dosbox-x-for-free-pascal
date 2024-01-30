@@ -41,6 +41,10 @@ host_cnv_char_t *CodePageGuestToHost(const char *s);
 #endif
 
 DOS_Device * Devices[DOS_DEVICES] = {NULL};
+// INT 29h emulation needs to keep track of CON
+device_CON *DOS_CON = NULL;
+FILE *CopyConToFile = NULL;
+
 extern std::map<int, int> lowboxdrawmap;
 extern int dos_clipboard_device_access;
 extern bool morelen, halfwidthkana, showdbcs;
@@ -219,6 +223,34 @@ uint32_t DOS_CheckExtDevice(const char *name, bool already_flag) {
 		off = next_off;
 	}
 	return 0;
+}
+
+void DOS_Copy_CON_to_File_Init() {
+    std::string val;
+    Section* t = control->GetSection("dos");
+    if(!t)
+	return;
+    val = t->GetPropValue("copy_con_to_file");
+    const char *filename = val.c_str();
+    if (filename && *filename != '\0') {
+      CopyConToFile = fopen(filename, "w");
+    }
+}
+
+void DOS_Copy_CON_to_File_Exit() {
+    std::string val;
+    Section* t = control->GetSection("dos");
+    if(!t)
+	return;
+    val = t->GetPropValue("copy_con_to_file");
+    const char *filename = val.c_str();
+    if (filename && *filename != '\0') {
+	if (CopyConToFile!=NULL){
+	    fflush(CopyConToFile);
+	    fclose(CopyConToFile);
+	    CopyConToFile=NULL;
+	}
+    }
 }
 
 static void DOS_CheckOpenExtDevice(const char *name) {
@@ -846,9 +878,6 @@ void DOS_ShutdownDevices(void) {
     if (IS_PC98_ARCH) update_pc98_function_row(0);
 }
 
-// INT 29h emulation needs to keep track of CON
-device_CON *DOS_CON = NULL;
-
 bool ANSI_SYS_installed() {
     if (DOS_CON != NULL)
         return DOS_CON->ANSI_SYS_installed();
@@ -898,6 +927,7 @@ void DOS_SetupDevices(void) {
 	DOS_Device * newdev;
 	DOS_CON=new device_CON(); newdev=DOS_CON;
 	DOS_AddDevice(newdev);
+	DOS_Copy_CON_to_File_Init();
 	DOS_Device * newdev2;
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
