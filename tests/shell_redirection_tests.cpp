@@ -47,108 +47,130 @@ private:
 TEST_F(DOS_Shell_REDIRTest, CMD_Redirection)
 {
 	MockDOS_Shell shell;
-	bool append = false;
+	bool append[2] = {false, false};
 	char line[CROSS_LEN];
-	char * in = 0, * out = 0, * toc = 0;
+	char * in = 0, * out = 0, * err = 0, * toc = 0;
 
 	strcpy(line, "echo hello!");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "echo hello!");
 	EXPECT_EQ(in, nullptr);
 	EXPECT_EQ(out, nullptr);
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err = 0; toc = 0;
 	strcpy(line, "echo test>test.txt");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "echo test");
 	EXPECT_EQ(in, nullptr);
 	EXPECT_STREQ(out, "test.txt");
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "sort<test.txt");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "sort");
 	EXPECT_STREQ(in, "test.txt");
 	EXPECT_EQ(out, nullptr);
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "less<in.txt>out.txt");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "less");
 	EXPECT_STREQ(in, "in.txt");
 	EXPECT_STREQ(out, "out.txt");
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "more<file.txt|sort");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "more");
 	EXPECT_STREQ(in, "file.txt");
 	EXPECT_EQ(out, nullptr);
+	EXPECT_EQ(err, nullptr);
 	EXPECT_STREQ(toc, "sort");
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<in.txt>>out.txt");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 	EXPECT_STREQ(in, "in.txt");
 	EXPECT_STREQ(out, "out.txt");
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, true);
+	EXPECT_EQ(append[0], true);
+	EXPECT_EQ(append[1], false);
 
-	append = false;
-	in = 0; out = 0; toc = 0;
+	append[0] = false;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "");
 	EXPECT_EQ(in, nullptr);
 	EXPECT_EQ(out, nullptr);
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, " echo  test < in.txt > out.txt ");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, " echo  test   ");
 	EXPECT_STREQ(in, "in.txt");
 	EXPECT_STREQ(out, "out.txt");
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "dir || more");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "dir ");
 	EXPECT_EQ(in, nullptr);
 	EXPECT_EQ(out,nullptr);
+	EXPECT_EQ(err,nullptr);
 	EXPECT_STREQ(toc, "| more");
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "dir *.bat << in.txt >> out.txt");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "dir *.bat  in.txt ");
 	EXPECT_STREQ(in, "<");
 	EXPECT_STREQ(out, "out.txt");
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, true);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 
-	in = 0; out = 0; toc = 0;
+	in = 0; out = 0; err= 0; toc = 0;
 	strcpy(line, "echo test>out1.txt>>out2.txt");
-	shell.GetRedirection(line, &in, &out, &toc, &append);
+	shell.GetRedirection(line, &in, &out, &err, &toc, append);
 	EXPECT_STREQ(line, "echo test");
 	EXPECT_EQ(in, nullptr);
 	EXPECT_STREQ(out, "out1.txt>>out2.txt");
+	EXPECT_EQ(err, nullptr);
 	EXPECT_EQ(toc, nullptr);
-	EXPECT_EQ(append, false);
+	EXPECT_EQ(append[0], false);
+	EXPECT_EQ(append[1], false);
 }
 
 } // namespace

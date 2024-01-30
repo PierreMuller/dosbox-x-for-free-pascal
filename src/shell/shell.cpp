@@ -283,7 +283,7 @@ DOS_Shell::DOS_Shell():Program(){
 	completion_index = 0;
 }
 
-Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **toc,bool * append) {
+Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **errfn, char **toc,bool * append) {
 
 	char * lr=s;
 	char * lw=s;
@@ -291,7 +291,10 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **toc,bool 
 	Bitu num=0;
 	bool quote = false;
 	bool lead1 = false, lead2 = false;
+	bool redir_stderr = false;
+	int  append_index = 0;
 	char* t;
+	char **fn;
 	int q;
 
 	while ( (ch=*lr++) ) {
@@ -310,14 +313,27 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **toc,bool 
 		case '"':
 			quote = !quote;
 			break;
+		case '2':
+			ch = lr[1];
+			if (ch != '>')
+			  continue;
+			redir_stderr = true;
+			/* Fallthrough */
 		case '>':
-			*append = ((*lr) == '>');
-			if (*append)
+			if (redir_stderr) {
+				fn = errfn;
+				append_index = 1;
+			} else {
+				fn = ofn;
+				append_index = 0;
+			};
+			append[append_index] = ((*lr) == '>');
+			if (append[append_index])
 				lr++;
 			lr = ltrim(lr);
-			if (*ofn)
-				free(*ofn);
-			*ofn = lr;
+			if (*fn)
+				free(*fn);
+			*fn = lr;
 			q = 0;
 			lead2 = false;
 			while (*lr && (q/2*2!=q || *lr != ' ') && *lr != '<' && !(!lead2 && *lr == '|')) {
@@ -330,11 +346,12 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **toc,bool 
 				lr++;
 			}
 			// if it ends on a : => remove it.
-			if ((*ofn != lr) && (lr[-1] == ':'))
+			if ((*fn != lr) && (lr[-1] == ':'))
 				lr[-1] = 0;
-			t = (char*)malloc(lr-*ofn+1);
-			safe_strncpy(t, *ofn, lr-*ofn+1);
-			*ofn = t;
+			t = (char*)malloc(lr-*fn+1);
+			safe_strncpy(t, *fn, lr-*fn+1);
+			*fn = t;
+			redir_stderr = false;
 			continue;
 		case '<':
 			if (*ifn)
@@ -430,18 +447,21 @@ void DOS_Shell::ParseLine(char * line) {
 	
 	char * in  = 0;
 	char * out = 0;
+	char * err = 0;
 	char * toc = 0;
 
 	uint16_t dummy,dummy2;
 	uint32_t bigdummy = 0;
-	bool append;
+	bool append[2] = {false, false};
 	bool normalstdin  = false;	/* whether stdin/out are open on start. */
 	bool normalstdout = false;	/* Bug: Assumed is they are "con"      */
+	bool normalstderr = false;	/* Bug: Assumed is they are "con"      */
 	
-    GetRedirection(line, &in, &out, &toc, &append);
-	if (in || out || toc) {
+    GetRedirection(line, &in, &out, &err, &toc, append);
+	if (in || out || err || toc) {
 		normalstdin  = (psp->GetFileHandle(0) != 0xff); 
 		normalstdout = (psp->GetFileHandle(1) != 0xff); 
+		normalstderr = (psp->GetFileHandle(2) != 0xff);
 	}
 	if (in) {
 		if(DOS_OpenFile(in,OPEN_READ,&dummy)) {	//Test if file exists
@@ -473,15 +493,16 @@ void DOS_Shell::ParseLine(char * line) {
 		}
 	}
 	DOS_Device *tmpdev = NULL;
-	if (out||toc) {
+	if (out||err||toc) {
 		if (out&&toc)
 			WriteOut(!*out?"Duplicate redirection\n":"Duplicate redirection - %s\n", out);
 		LOG_MSG("SHELL:Redirect output to %s",toc?pipetmp:out);
 		if(normalstdout) DOS_CloseFile(1);
+		if(normalstderr) DOS_CloseFile(2);
 		if(!normalstdin && !in) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
-		if(!toc&&append) {
+		if(out&&append[0]) {
 			if (DOS_GetFileAttr(out, &fattr) && fattr&DOS_ATTR_READ_ONLY) {
 				DOS_SetError(DOSERR_ACCESS_DENIED);
 				status = false;
@@ -490,10 +511,25 @@ void DOS_Shell::ParseLine(char * line) {
 			} else {
 				status = DOS_CreateFile(out,DOS_ATTR_ARCHIVE,&dummy);	//Create if not exists.
 			}
-		} else if (!toc&&DOS_GetFileAttr(out, &fattr) && fattr&DOS_ATTR_READ_ONLY) {
+		} else if (out&&DOS_GetFileAttr(out, &fattr) && fattr&DOS_ATTR_READ_ONLY) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			status = false;
-		} else {
+		}
+		/* Create if not exist. Open if exist. Both in read/write mode */
+		if(err&&append[1]) {
+			if (DOS_GetFileAttr(err, &fattr) && fattr&DOS_ATTR_READ_ONLY) {
+				DOS_SetError(DOSERR_ACCESS_DENIED);
+				status = false;
+			} else if( (status = DOS_OpenFile(err,OPEN_READWRITE,&dummy)) ) {
+				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
+			} else {
+				status = DOS_CreateFile(err,DOS_ATTR_ARCHIVE,&dummy);	//Create if not exists.
+			}
+		} else if (err&&DOS_GetFileAttr(err, &fattr) && fattr&DOS_ATTR_READ_ONLY) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			status = false;
+		}
+		if (toc) {
             bool device=DOS_FindDevice(pipetmp)!=DOS_DEVICES;
 			if (toc&&!device&&DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME)&&!DOS_UnlinkFile(pipetmp))
 				fail=true;

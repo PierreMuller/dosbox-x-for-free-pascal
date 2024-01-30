@@ -125,7 +125,7 @@ public:
 
     /*! \brief      Redirection handling
      */
-	Bitu GetRedirection(char *s, char **ifn, char **ofn, char **toc,bool * append);
+	Bitu GetRedirection(char *s, char **ifn, char **ofn, char **errfn, char **toc, bool * append);
 
     /*! \brief      Build Tab completion
      */
