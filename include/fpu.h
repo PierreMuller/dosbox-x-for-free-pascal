@@ -163,10 +163,17 @@ union alignas(8) MMX_reg {
 	} sd;
 	static_assert(sizeof(sd) == 8, "MMX packing error");
 
-	struct {
+	struct uw_t {
 		uint16_t w3,w2,w1,w0;
 	} uw;
 	static_assert(sizeof(uw) == 8, "MMX packing error");
+	uint16_t uwa[4]; /* for PSHUFW */
+	static_assert(sizeof(uwa) == 8, "MMX packing error");
+	static_assert(offsetof(uw_t,w3) == 0, "MMX packing error");
+	static_assert(offsetof(uw_t,w2) == 2, "MMX packing error");
+	static_assert(offsetof(uw_t,w1) == 4, "MMX packing error");
+	static_assert(offsetof(uw_t,w0) == 6, "MMX packing error");
+
 
 	struct {
 		uint16_t w3,w2,w1,w0;
