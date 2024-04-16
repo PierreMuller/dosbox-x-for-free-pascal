@@ -6827,7 +6827,7 @@ bool DOSBOX_parse_argv() {
 
             fprintf(stderr,"\nDOSBox-X version %s %s, copyright 2011-%s The DOSBox-X Team.\n",VERSION,SDL_STRING,COPYRIGHT_END_YEAR);
             fprintf(stderr,"DOSBox-X project maintainer: joncampbell123 (The Great Codeholio)\n\n");
-            fprintf(stderr,"DOSBox-X Free Pascal testsuite adaptation: PierreMuller (from the Free Pascal Core Team)\n\n");
+            fprintf(stderr,"DOSBox-X Free Pascal testsuite adaptation: Pierre Muller (from the Free Pascal Core Team)\n\n");
             fprintf(stderr,"DOSBox-X comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
             fprintf(stderr,"and you are welcome to redistribute it under certain conditions;\n");
             fprintf(stderr,"please read the COPYING file thoroughly before doing so.\n\n");
@@ -6843,7 +6843,7 @@ bool DOSBOX_parse_argv() {
 
             fprintf(stderr,"\nDOSBox-X version %s %s, copyright 2011-%s The DOSBox-X Team.\n",VERSION,SDL_STRING,COPYRIGHT_END_YEAR);
             fprintf(stderr,"DOSBox-X project maintainer: joncampbell123 (The Great Codeholio)\n\n");
-            fprintf(stderr,"DOSBox-X Free Pascal testsuite adaptation: PierreMuller (from the Free Pascal Core Team)\n\n");
+            fprintf(stderr,"DOSBox-X Free Pascal testsuite adaptation: Pierre Muller (from the Free Pascal Core Team)\n\n");
             fprintf(stderr,"dosbox-x [name] [options]\n\n");
             fprintf(stderr,"Options can be started with either \"-\" or \"/\" (e.g. \"-help\" or \"/help\"):\n\n");
             fprintf(stderr,"  -?, -h, -help                           Show this help screen\n");
@@ -6912,7 +6912,7 @@ bool DOSBOX_parse_argv() {
             fprintf(stderr,"\ndosbox-x [options]\n");
             fprintf(stderr,"\nDOSBox-X version %s %s, copyright 2011-%s The DOSBox-X Team.\n",VERSION,SDL_STRING,COPYRIGHT_END_YEAR);
             fprintf(stderr,"DOSBox-X project maintainer: joncampbell123 (The Great Codeholio)\n\n");
-            fprintf(stderr,"DOSBox-X Free Pascal testsuite adaptation: PierreMuller (from the Free Pascal Core Team)\n\n");
+            fprintf(stderr,"DOSBox-X Free Pascal testsuite adaptation: Pierre Muller (from the Free Pascal Core Team)\n\n");
             fprintf(stderr,"Based on DOSBox by the DOSBox Team (See AUTHORS file)\n\n");
             fprintf(stderr,"Debugging options:\n\n");
             fprintf(stderr,"  -debug                                  Set all logging levels to debug\n");
@@ -8565,7 +8565,7 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
         /* -- Welcome to DOSBox-X! */
         LOG_MSG("DOSBox-X version %s Commit %s (%s %s %d-bit)",VERSION, GIT_COMMIT_HASH, OS_PLATFORM_LONG, SDL_STRING, OS_BIT_INT);
         LOG(LOG_MISC,LOG_NORMAL)("Copyright 2011-%s The DOSBox-X Team. Project maintainer: joncampbell123 (The Great Codeholio). DOSBox-X published under GNU GPL.",std::string(COPYRIGHT_END_YEAR).c_str());
-        LOG(LOG_MISC,LOG_NORMAL)("DOSBox-X Free Pascal testsuite adaptation: PierreMuller (from the Free Pascal Core Team)");
+        LOG(LOG_MISC,LOG_NORMAL)("DOSBox-X Free Pascal testsuite adaptation: Pierre Muller (from the Free Pascal Core Team)");
 
 #if defined(MACOSX)
         LOG_MSG("macOS EXE path: %s",MacOSXEXEPath.c_str());
